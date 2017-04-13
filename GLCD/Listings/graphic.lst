@@ -1,0 +1,149 @@
+C51 COMPILER V9.55   GRAPHIC                                                               05/05/2016 15:17:01 PAGE 1   
+
+
+C51 COMPILER V9.55, COMPILATION OF MODULE GRAPHIC
+OBJECT MODULE PLACED IN .\Objects\graphic.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE graphic.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\g
+                    -raphic.lst) TABS(2) OBJECT(.\Objects\graphic.obj)
+
+line level    source
+
+   1          extern void GLCD_SetPixel(unsigned char x, unsigned char y, unsigned char color);
+   2          
+   3          const unsigned char color = 1;
+   4          
+   5          void GLCD_Rectangle(unsigned char x, unsigned char y, unsigned char b, unsigned char a)
+   6          {
+   7   1        unsigned char j; // zmienna pomocnicza
+   8   1        // rysowanie linii pionowych (boki)
+   9   1        for (j = 0; j < a; j++) {
+  10   2          GLCD_SetPixel(x, y + j, color);
+  11   2          GLCD_SetPixel(x + b - 1, y + j, color);
+  12   2        }
+  13   1        // rysowanie linii poziomych (podstawy)
+  14   1        for (j = 0; j < b; j++) {
+  15   2          GLCD_SetPixel(x + j, y, color);
+  16   2          GLCD_SetPixel(x + j, y + a - 1, color);
+  17   2        }
+  18   1      }
+  19          //
+  20          
+  21          void GLCD_Circle(unsigned char cx, unsigned char cy ,unsigned char radius)
+  22          {
+  23   1      int x, y, xchange, ychange, radiusError;
+  24   1      x = radius;
+  25   1      y = 0;
+  26   1      xchange = 1 - 2 * radius;
+  27   1      ychange = 1;
+  28   1      radiusError = 0;
+  29   1      while(x >= y)
+  30   1        {
+  31   2        GLCD_SetPixel(cx+x, cy+y, color); 
+  32   2        GLCD_SetPixel(cx-x, cy+y, color); 
+  33   2        GLCD_SetPixel(cx-x, cy-y, color);
+  34   2        GLCD_SetPixel(cx+x, cy-y, color); 
+  35   2        GLCD_SetPixel(cx+y, cy+x, color); 
+  36   2        GLCD_SetPixel(cx-y, cy+x, color); 
+  37   2        GLCD_SetPixel(cx-y, cy-x, color); 
+  38   2        GLCD_SetPixel(cx+y, cy-x, color); 
+  39   2        y++;
+  40   2        radiusError += ychange;
+  41   2        ychange += 2;
+  42   2        if ( 2*radiusError + xchange > 0 )
+  43   2          {
+  44   3          x--;
+  45   3        radiusError += xchange;
+  46   3        xchange += 2;
+  47   3        }
+  48   2        }
+  49   1      }
+  50          //
+  51          
+  52          void GLCD_Line(unsigned int X1,unsigned int Y1,unsigned int X2,unsigned int Y2)
+  53          {
+  54   1      int CurrentX, CurrentY, Xinc, Yinc, 
+C51 COMPILER V9.55   GRAPHIC                                                               05/05/2016 15:17:01 PAGE 2   
+
+  55   1          Dx, Dy, TwoDx, TwoDy, 
+  56   1        TwoDxAccumulatedError, TwoDyAccumulatedError;
+  57   1      
+  58   1      Dx = (X2-X1); // obliczenie sk³adowej poziomej
+  59   1      Dy = (Y2-Y1); // obliczenie sk³adowej pionowej
+  60   1      
+  61   1      TwoDx = Dx + Dx; // podwojona sk³adowa pozioma
+  62   1      TwoDy = Dy + Dy; // podwojona sk³adowa pionowa
+  63   1      
+  64   1      CurrentX = X1; // zaczynamy od X1
+  65   1      CurrentY = Y1; // oraz Y1
+  66   1      
+  67   1      Xinc = 1; // ustalamy krok zwiêkszania pozycji w poziomie 
+  68   1      Yinc = 1; // ustalamy krok zwiêkszania pozycji w pionie
+  69   1      
+  70   1      if(Dx < 0) // jesli sk³adowa pozioma jest ujemna 
+  71   1        {
+  72   2        Xinc = -1; // to bêdziemy siê "cofaæ" (krok ujemny)
+  73   2        Dx = -Dx;  // zmieniamy znak sk³adowej na dodatni
+  74   2        TwoDx = -TwoDx; // jak równie¿ podwojonej sk³adowej
+  75   2        }
+  76   1      
+  77   1      if (Dy < 0) // jeœli sk³adowa pionowa jest ujemna
+  78   1        {
+  79   2        Yinc = -1; // to bêdziemy siê "cofaæ" (krok ujemny)
+  80   2        Dy = -Dy; // zmieniamy znak sk³adowej na dodatki
+  81   2        TwoDy = -TwoDy; // jak równiez podwojonej sk³adowej
+  82   2        }
+  83   1      
+  84   1      GLCD_SetPixel(X1,Y1, color); // stawiamy pierwszy krok (zapalamy pierwszy piksel)
+  85   1      
+  86   1      if ((Dx != 0) || (Dy != 0)) // sprawdzamy czy linia sk³ada siê z wiêcej ni¿ jednego punktu ;)
+  87   1        {
+  88   2        // sprawdzamy czy sk³adowa pionowa jest mniejsza lub równa sk³adowej poziomej
+  89   2        if (Dy <= Dx) // jeœli tak, to idziemy "po iksach"
+  90   2          { 
+  91   3          TwoDxAccumulatedError = 0; // zerujemy zmienn¹ 
+  92   3          do // ruszamy w drogê
+  93   3          {
+  94   4            CurrentX += Xinc; // do aktualnej pozycji dodajemy krok 
+  95   4            TwoDxAccumulatedError += TwoDy; // a tu dodajemy podwojon¹ sk³adow¹ pionow¹
+  96   4            if(TwoDxAccumulatedError > Dx)  // jeœli TwoDxAccumulatedError jest wiêkszy od Dx
+  97   4              {
+  98   5              CurrentY += Yinc; // zwiêkszamy aktualn¹ pozycjê w pionie
+  99   5              TwoDxAccumulatedError -= TwoDx; // i odejmujemy TwoDx
+ 100   5              }
+ 101   4             GLCD_SetPixel(CurrentX,CurrentY, color);// stawiamy nastêpny krok (zapalamy piksel)
+ 102   4             }while (CurrentX != X2); // idziemy tak d³ugo, a¿ osi¹gniemy punkt docelowy
+ 103   3           }
+ 104   2         else // w przeciwnym razie idziemy "po igrekach" 
+ 105   2            {
+ 106   3            TwoDyAccumulatedError = 0; 
+ 107   3            do 
+ 108   3            {
+ 109   4              CurrentY += Yinc; 
+ 110   4              TwoDyAccumulatedError += TwoDx;
+ 111   4              if(TwoDyAccumulatedError>Dy) 
+ 112   4                {
+ 113   5                CurrentX += Xinc;
+ 114   5                TwoDyAccumulatedError -= TwoDy;
+ 115   5                }
+ 116   4               GLCD_SetPixel(CurrentX,CurrentY, color); 
+C51 COMPILER V9.55   GRAPHIC                                                               05/05/2016 15:17:01 PAGE 3   
+
+ 117   4               }while (CurrentY != Y2);
+ 118   3          }
+ 119   2        }
+ 120   1      }
+ 121          //
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    743    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1      45
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

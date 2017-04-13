@@ -1,0 +1,116 @@
+C51 COMPILER V9.55   KS0108                                                                05/05/2016 15:28:52 PAGE 1   
+
+
+C51 COMPILER V9.55, COMPILATION OF MODULE KS0108
+OBJECT MODULE PLACED IN .\Objects\KS0108.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE KS0108.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\KS
+                    -0108.lst) TABS(2) OBJECT(.\Objects\KS0108.obj)
+
+line level    source
+
+   1          //-------------------------------------------------------------------------------------------------
+   2          // Universal KS0108 driver library
+   3          // (c) Rados³aw Kwiecieñ, radek@dxp.pl
+   4          //-------------------------------------------------------------------------------------------------
+   5          #include "KS0108.h"
+   6          #include "font5x8.h"
+   7          //-------------------------------------------------------------------------------------------------
+   8          extern void GLCD_InitalizePorts(void);
+   9          //-------------------------------------------------------------------------------------------------
+  10          unsigned char screen_x = 0, screen_y = 0;
+  11          //-------------------------------------------------------------------------------------------------
+  12          //
+  13          //-------------------------------------------------------------------------------------------------
+  14          void GLCD_Initalize(void)
+  15          {
+  16   1      unsigned char i;
+  17   1      GLCD_InitalizePorts();
+  18   1      for(i = 0; i < 3; i++)
+  19   1        GLCD_WriteCommand((DISPLAY_ON_CMD | ON), i);
+  20   1      }
+  21          //-------------------------------------------------------------------------------------------------
+  22          //
+  23          //-------------------------------------------------------------------------------------------------
+  24          void GLCD_GoTo(unsigned char x, unsigned char y)
+  25          {
+  26   1      unsigned char i;
+  27   1      screen_x = x;
+  28   1      screen_y = y;
+  29   1      
+  30   1      for(i = 0; i < KS0108_SCREEN_WIDTH/64; i++)
+  31   1        {
+  32   2        GLCD_WriteCommand(DISPLAY_SET_Y | 0,i);
+  33   2        GLCD_WriteCommand(DISPLAY_SET_X | y,i);
+  34   2        GLCD_WriteCommand(DISPLAY_START_LINE | 0,i);
+  35   2        }
+  36   1      GLCD_WriteCommand(DISPLAY_SET_Y | (x % 64), (x / 64));
+  37   1      GLCD_WriteCommand(DISPLAY_SET_X | y, (x / 64));
+  38   1      }
+  39          //-------------------------------------------------------------------------------------------------
+  40          //
+  41          //-------------------------------------------------------------------------------------------------
+  42          void GLCD_ClearScreen(void)
+  43          {
+  44   1      unsigned char i, j;
+  45   1      for(j = 0; j < KS0108_SCREEN_HEIGHT/8; j++)
+  46   1        {
+  47   2        GLCD_GoTo(0,j);
+  48   2        for(i = 0; i < KS0108_SCREEN_WIDTH; i++)
+  49   2          GLCD_WriteData(0x00);
+  50   2        }
+  51   1      }
+  52          //-------------------------------------------------------------------------------------------------
+  53          //
+  54          //-------------------------------------------------------------------------------------------------
+C51 COMPILER V9.55   KS0108                                                                05/05/2016 15:28:52 PAGE 2   
+
+  55          void GLCD_WriteChar(char charToWrite)
+  56          {
+  57   1      int i;
+  58   1      charToWrite -= 32; 
+  59   1      for(i = 0; i < 5; i++) 
+  60   1        GLCD_WriteData(GLCD_ReadByteFromROMMemory((char *)((int)font5x8 + (5 * charToWrite) + i))); 
+  61   1      GLCD_WriteData(0x00);
+  62   1      }
+  63          //-------------------------------------------------------------------------------------------------
+  64          //
+  65          //-------------------------------------------------------------------------------------------------
+  66          void GLCD_WriteString(char * stringToWrite)
+  67          {
+  68   1      while(*stringToWrite)
+  69   1        GLCD_WriteChar(*stringToWrite++);
+  70   1      }
+  71          //-------------------------------------------------------------------------------------------------
+  72          //
+  73          //-------------------------------------------------------------------------------------------------
+  74          void GLCD_SetPixel(unsigned char x, unsigned char y, unsigned char color)
+  75          {
+  76   1      unsigned char tmp;
+  77   1      GLCD_GoTo(x, (y / 8));
+  78   1      tmp = GLCD_ReadData();
+  79   1      GLCD_GoTo(x, (y / 8));
+  80   1      tmp = GLCD_ReadData();
+  81   1      GLCD_GoTo(x, (y / 8));
+  82   1      tmp |= (1 << (y % 8));
+  83   1      GLCD_WriteData(tmp);
+  84   1      }
+*** WARNING C280 IN LINE 74 OF KS0108.c: 'color': unreferenced local variable
+  85          //-------------------------------------------------------------------------------------------------
+  86          //
+  87          //-------------------------------------------------------------------------------------------------
+  88          void GLCD_Bitmap(char * bmp, unsigned char x, unsigned char y, unsigned char dx, unsigned char dy)
+  89          {
+  90   1      unsigned char i, j;
+  91   1      for(j = 0; j < dy / 8; j++)
+  92   1        {
+  93   2        GLCD_GoTo(x,y + j);
+  94   2        for(i = 0; i < dx; i++) 
+  95   2          GLCD_WriteData(GLCD_ReadByteFromROMMemory(bmp++));
+  96   2        }
+  97   1      }
+  98          //-------------------------------------------------------------------------------------------------
+  99          //
+ 100          //-------------------------------------------------------------------------------------------------
+*** ERROR C249 IN LINE 100 OF KS0108.c: 'DATA': SEGMENT TOO LARGE
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  1 ERROR(S)
